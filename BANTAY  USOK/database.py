@@ -26,3 +26,10 @@ def insert_report(smoke_type, location, description, photo_path):
     ''', (smoke_type, location, description, photo_path))
     conn.commit()
     conn.close()
+
+def update_status(report_id, new_status):
+    conn = sqlite3.connect('reports.db')
+    c = conn.cursor()
+    c.execute("UPDATE reports SET status = ? WHERE id = ?", (new_status, report_id))
+    conn.commit()
+    conn.close()
