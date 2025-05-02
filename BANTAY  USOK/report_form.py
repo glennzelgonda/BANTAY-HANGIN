@@ -86,6 +86,8 @@ class BantayUsokApp(ctk.CTk):
         records = cursor.fetchall()
         conn.close()
 
+        self.display_summary()
+
         canvas = Canvas(self.dashboard_frame, bg="white", highlightthickness=0)
         canvas.pack(side="left", fill="both", expand=True)
 
@@ -114,6 +116,58 @@ class BantayUsokApp(ctk.CTk):
 
         canvas.update_idletasks()
         canvas.config(scrollregion=canvas.bbox("all"))
+
+    def display_summary(self):
+        conn = sqlite3.connect("reports.db")
+        cursor = conn.cursor()
+
+        # 1. Total reports
+        cursor.execute("SELECT COUNT(*) FROM reports")
+        total_reports = cursor.fetchone()[0]
+
+        # 2. Smoke type breakdown
+        cursor.execute("SELECT smoke_type, COUNT(*) FROM reports GROUP BY smoke_type")
+        smoke_counts = cursor.fetchall()
+
+        # 3. Monthly trends
+        cursor.execute(
+            "SELECT strftime('%Y-%m', timestamp) AS month, COUNT(*) FROM reports GROUP BY month ORDER BY month")
+        monthly_trends = cursor.fetchall()
+
+        # 4. Status breakdown
+        cursor.execute("SELECT status, COUNT(*) FROM reports GROUP BY status")
+        status_counts = cursor.fetchall()
+
+        conn.close()
+
+        # Create a frame to hold summary
+        summary_frame = ctk.CTkFrame(self.dashboard_frame, fg_color="#f0f0f0")
+        summary_frame.pack(fill="x", padx=10, pady=10)
+
+        # Total Reports
+        ctk.CTkLabel(summary_frame, text=f"📋 Total Reports: {total_reports}", font=("Arial", 14, "bold")).pack(
+            anchor="w", padx=10, pady=5)
+
+        # Smoke Type Breakdown
+        breakdown = "🔥 Smoke Types:\n"
+        for smoke_type, count in smoke_counts:
+            breakdown += f"• {smoke_type}: {count}\n"
+        ctk.CTkLabel(summary_frame, text=breakdown.strip(), font=("Arial", 12), justify="left").pack(anchor="w",
+                                                                                                     padx=10)
+
+        # Monthly Trends
+        trend_text = "📈 Monthly Trends:\n"
+        for month, count in monthly_trends:
+            trend_text += f"• {month}: {count} reports\n"
+        ctk.CTkLabel(summary_frame, text=trend_text.strip(), font=("Arial", 12), justify="left").pack(anchor="w",
+                                                                                                      padx=10, pady=5)
+
+        # Status Breakdown
+        status_text = "🟢 Case Status:\n"
+        for status, count in status_counts:
+            status_text += f"• {status.capitalize()}: {count}\n"
+        ctk.CTkLabel(summary_frame, text=status_text.strip(), font=("Arial", 12), justify="left").pack(anchor="w",
+                                                                                                       padx=10)
 
     def open_photo(self, path):
         try:
