@@ -14,7 +14,7 @@ class BantayUsokApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("BantayHangin - Smoke Reporting System")
-        self.geometry("900x600")
+        self.geometry("1400x700")
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
         self.resizable(True, True)
@@ -37,51 +37,76 @@ class BantayUsokApp(ctk.CTk):
         self.after(50, self.animate_gif)  # Adjust timing if needed
 
     def build_report_tab(self):
-        # 🖼️ Load animated GIF
+        # 🎞️ Load animated GIF frames
         gif_path = "images/bg_report_tab.gif"
         self.gif_image = Image.open(gif_path)
         self.gif_frames = []
 
         try:
             while True:
-                frame = self.gif_image.copy().resize((1400, 700))
+                frame = self.gif_image.copy().resize((1400, 650))
                 self.gif_frames.append(ImageTk.PhotoImage(frame))
-                self.gif_image.seek(len(self.gif_frames))  # Move to next frame
+                self.gif_image.seek(len(self.gif_frames))
         except EOFError:
-            pass  # End of frames
+            pass
 
         self.current_frame = 0
 
-        # 🎞️ Create canvas and start animation
-        self.canvas = Canvas(self.report_tab, width=900, height=600, highlightthickness=0)
+        # 🎥 Canvas for background
+        self.canvas = Canvas(self.report_tab, width=1400, height=650, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
         self.bg_image_id = self.canvas.create_image(0, 0, anchor="nw", image=self.gif_frames[0])
         self.animate_gif()
 
-        # 🧾 Create the form frame
-        form_frame = ctk.CTkFrame(master=self.canvas, fg_color="white", corner_radius=10)
-        self.canvas.create_window(685, 360, window=form_frame, anchor="center")
-
+        # 🧾 Semi-transparent-style form frame (solid light color instead)
+        form_frame = ctk.CTkFrame(master=self.canvas, fg_color="#a2c4c9", corner_radius=1)
+        self.canvas.create_window(685, 380, window=form_frame, anchor="center")
         form_frame.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(form_frame, text="Smoke Type:", fg_color="transparent").grid(row=0, column=0, sticky="w",
-                                                                                  pady=(0, 5))
-        self.smoke_type = ctk.CTkOptionMenu(form_frame, values=["Cigarette", "Burning Trash", "Vehicle Emission"])
-        self.smoke_type.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        # Title
+        ctk.CTkLabel(form_frame, text="Report Smoke", font=("Helvetica", 20, "bold"), text_color="#222").grid(
+            row=0, column=0, pady=(10, 20))
 
-        ctk.CTkLabel(form_frame, text="Location (Barangay/Street):", fg_color="transparent").grid(row=2, column=0,
-                                                                                                  sticky="w",
-                                                                                                  pady=(0, 5))
-        self.location_entry = ctk.CTkEntry(form_frame, placeholder_text="e.g. Barangay 5, Mabini St.")
-        self.location_entry.grid(row=3, column=0, sticky="ew", pady=(0, 10))
+        # Smoke Type
+        ctk.CTkLabel(form_frame, text="Smoke Type:", text_color="#333", font=("Helvetica", 14)).grid(
+            row=1, column=0, sticky="w", padx=20)
 
-        ctk.CTkLabel(form_frame, text="Description:", fg_color="transparent").grid(row=4, column=0, sticky="w",
-                                                                                   pady=(0, 5))
-        self.description_entry = ctk.CTkTextbox(form_frame, height=100)
-        self.description_entry.grid(row=5, column=0, sticky="ew", pady=(0, 10))
+        # OptionMenu with color customization
+        self.smoke_type = ctk.CTkOptionMenu(
+            form_frame,
+            values=["Cigarette", "Burning Trash", "Vehicle Emission"],
+            button_color="#309baa",  # Change button (dropdown) background color
+            fg_color="#309baa",  # Change foreground (button text) color
+            text_color="black"  # Change text color inside the dropdown
+        )
+        self.smoke_type.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="ew")
 
-        ctk.CTkButton(form_frame, text="Upload Photo", command=self.upload_photo).grid(row=6, column=0, pady=(0, 10))
-        ctk.CTkButton(form_frame, text="Submit Report", command=self.submit_report).grid(row=7, column=0, pady=(0, 10))
+        # Location
+        ctk.CTkLabel(form_frame, text="Location (Barangay/Street):", text_color="#333", font=("Helvetica", 14)).grid(
+            row=3, column=0, sticky="w", padx=20)
+        self.location_entry = ctk.CTkEntry(form_frame, placeholder_text="e.g. Barangay 5, Mabini St.",
+                                           font=("Helvetica", 13))
+        self.location_entry.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
+
+        # Description
+        ctk.CTkLabel(form_frame, text="Description:", text_color="#333", font=("Helvetica", 14)).grid(
+            row=5, column=0, sticky="w", padx=20)
+        self.description_entry = ctk.CTkTextbox(form_frame, height=100, font=("Helvetica", 13))
+        self.description_entry.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
+
+        # Upload & Submit
+        ctk.CTkButton(form_frame,
+                      text="Upload Photo",
+                      command=self.upload_photo,
+                      fg_color="#309baa"  # Set button text color
+                      ).grid(row=7, column=0, padx=20, pady=(10, 5))
+
+        # In the submit report button
+        ctk.CTkButton(form_frame,
+                      text="Submit Report",
+                      command=self.submit_report,
+                      fg_color="#309baa"  # Set button text color
+                      ).grid(row=8, column=0, padx=20, pady=(5, 20))
 
     def upload_photo(self):
         file_path = fd.askopenfilename(filetypes=[("Image Files", "*.png *.jpg *.jpeg")])
