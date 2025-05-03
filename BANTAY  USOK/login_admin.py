@@ -8,7 +8,7 @@ VALID_PASSWORD = "admin123"
 class AdminLogin(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("BantayUsok - Admin Login")
+        self.title("BantayHangin - Admin Login")
         self.geometry("400x300")
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")

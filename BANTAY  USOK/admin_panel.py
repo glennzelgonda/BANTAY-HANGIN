@@ -11,8 +11,9 @@ from database import update_status
 class AdminPanel(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master=master)
-        self.title("BantayUsok - Admin Panel")
-        self.geometry("1000x600")
+        self.title("BantayHangin - Admin Panel")
+        self.geometry("900x600")
+        self.resizable(False, False)
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
 
@@ -44,7 +45,7 @@ class AdminPanel(ctk.CTkToplevel):
         headers = ["Smoke Type", "Location", "Description", "Photo", "Status", "Timestamp"]
         for col_index, header in enumerate(headers):
             label = ctk.CTkLabel(data_frame, text=header, font=("Arial", 12, "bold"), text_color="black")
-            label.grid(row=0, column=col_index, padx=10, pady=5)
+            label.grid(row=0, column=col_index, padx=37, pady=5)
 
         for row_index, record in enumerate(records, start=1):
             report_id, smoke_type, location, description, photo_path, status, timestamp = record

@@ -8,15 +8,16 @@ import os
 import platform
 import subprocess
 from functools import partial
+from PIL import Image, ImageTk
 
 class BantayUsokApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("BantayUsok - Smoke Reporting System")
+        self.title("BantayHangin - Smoke Reporting System")
         self.geometry("900x600")
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
-
+        self.resizable(False, False)
         self.photo_path = None
 
         tabview = ctk.CTkTabview(self)
@@ -31,20 +32,34 @@ class BantayUsokApp(ctk.CTk):
         self.build_dashboard_tab()
 
     def build_report_tab(self):
-        ctk.CTkLabel(self.report_tab, text="Smoke Type:").pack(pady=5)
-        self.smoke_type = ctk.CTkOptionMenu(self.report_tab, values=["Cigarette", "Burning Trash", "Vehicle Emission"])
+        # Load background image
+        bg_path = "images/bg_report_tab.jpg"  # Ensure this matches the actual filename
+        image = Image.open(bg_path).resize((900, 600))
+        self.bg_image = ImageTk.PhotoImage(image)
+
+        # Create canvas to hold background
+        canvas = Canvas(self.report_tab, width=900, height=600, highlightthickness=0)
+        canvas.pack(fill="both", expand=True)
+        canvas.create_image(0, 0, anchor="nw", image=self.bg_image)
+
+
+        form_frame = ctk.CTkFrame(master=canvas, fg_color="transparent")  # Try "transparent"
+        canvas.create_window(450, 340, window=form_frame, anchor="center")
+
+        ctk.CTkLabel(form_frame, text="Smoke Type:", fg_color="transparent").pack(pady=5)
+        self.smoke_type = ctk.CTkOptionMenu(form_frame, values=["Cigarette", "Burning Trash", "Vehicle Emission"])
         self.smoke_type.pack()
 
-        ctk.CTkLabel(self.report_tab, text="Location (Barangay/Street):").pack(pady=5)
-        self.location_entry = ctk.CTkEntry(self.report_tab, placeholder_text="e.g. Barangay 5, Mabini St.")
+        ctk.CTkLabel(form_frame, text="Location (Barangay/Street):", fg_color="transparent").pack(pady=5)
+        self.location_entry = ctk.CTkEntry(form_frame, placeholder_text="e.g. Barangay 5, Mabini St.")
         self.location_entry.pack()
 
-        ctk.CTkLabel(self.report_tab, text="Description:").pack(pady=5)
-        self.description_entry = ctk.CTkTextbox(self.report_tab, height=100)
+        ctk.CTkLabel(form_frame, text="Description:", fg_color="transparent").pack(pady=5)
+        self.description_entry = ctk.CTkTextbox(form_frame, height=100)
         self.description_entry.pack()
 
-        ctk.CTkButton(self.report_tab, text="Upload Photo", command=self.upload_photo).pack(pady=10)
-        ctk.CTkButton(self.report_tab, text="Submit Report", command=self.submit_report).pack(pady=10)
+        ctk.CTkButton(form_frame, text="Upload Photo", command=self.upload_photo).pack(pady=10)
+        ctk.CTkButton(form_frame, text="Submit Report", command=self.submit_report).pack(pady=10)
 
     def upload_photo(self):
         file_path = fd.askopenfilename(filetypes=[("Image Files", "*.png *.jpg *.jpeg")])
@@ -100,8 +115,8 @@ class BantayUsokApp(ctk.CTk):
 
         headers = ["Smoke Type", "Location", "Description", "Photo", "Status", "Timestamp"]
         for col_index, header in enumerate(headers):
-            label = ctk.CTkLabel(data_frame, text=header, font=("Arial", 12, "bold"), text_color="black")
-            label.grid(row=0, column=col_index, padx=10, pady=5)
+            label = ctk.CTkLabel(data_frame, text=header, font=("MS UI Gothic", 16, "bold"), text_color="black")
+            label.grid(row=0, column=col_index, padx=33, pady=5)
 
         for row_index, record in enumerate(records, start=1):
             for col_index, value in enumerate(record):
