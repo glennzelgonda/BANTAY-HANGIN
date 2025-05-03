@@ -137,8 +137,8 @@ class BantayUsokApp(ctk.CTk):
 
         headers = ["Smoke Type", "Location", "Description", "Photo", "Status", "Timestamp"]
         for col_index, header in enumerate(headers):
-            label = ctk.CTkLabel(data_frame, text=header, font=("MS UI Gothic", 16, "bold"), text_color="black")
-            label.grid(row=0, column=col_index, padx=33, pady=5)
+            label = ctk.CTkLabel(data_frame, text=header, font=("MS UI Gothic", 20, "bold"), text_color="black")
+            label.grid(row=0, column=col_index, padx=65, pady=5)
 
         for row_index, record in enumerate(records, start=1):
             for col_index, value in enumerate(record):
