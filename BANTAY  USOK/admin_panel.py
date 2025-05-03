@@ -1,6 +1,7 @@
 import customtkinter as ctk
+import tkinter as tk
+tk.Tk().withdraw()
 import tkinter.messagebox as messagebox
-from tkinter import Scrollbar, Canvas
 import sqlite3
 import os
 import platform
@@ -32,41 +33,49 @@ class AdminPanel(ctk.CTkToplevel):
         records = cursor.fetchall()
         conn.close()
 
-        canvas = Canvas(self.dashboard_frame, bg="white", highlightthickness=0)
+        canvas = ctk.CTkCanvas(self.dashboard_frame, bg="white", highlightthickness=0)
         canvas.pack(side="left", fill="both", expand=True)
 
         data_frame = ctk.CTkFrame(canvas, fg_color="white")
         canvas.create_window((0, 0), window=data_frame, anchor="nw")
 
-        v_scrollbar = Scrollbar(self.dashboard_frame, orient="vertical", command=canvas.yview)
-        canvas.configure(yscrollcommand=v_scrollbar.set)
+        v_scrollbar = ctk.CTkScrollbar(self.dashboard_frame, orientation="vertical", command=canvas.yview)
         v_scrollbar.pack(side="right", fill="y")
+        canvas.configure(yscrollcommand=v_scrollbar.set)
 
         headers = ["Smoke Type", "Location", "Description", "Photo", "Status", "Timestamp"]
-        for col_index, header in enumerate(headers):
-            label = ctk.CTkLabel(data_frame, text=header, font=("Arial", 12, "bold"), text_color="black")
-            label.grid(row=0, column=col_index, padx=37, pady=5)
+        for col, header in enumerate(headers):
+            ctk.CTkLabel(data_frame, text=header, font=("Arial", 12, "bold"), text_color="black")\
+                .grid(row=0, column=col, padx=37, pady=5)
 
-        for row_index, record in enumerate(records, start=1):
+        for row, record in enumerate(records, start=1):
             report_id, smoke_type, location, description, photo_path, status, timestamp = record
-            values = [smoke_type, location, description, photo_path, status, timestamp]
+            cells = [smoke_type, location, description, photo_path, status, timestamp]
 
-            for col_index, value in enumerate(values):
-                if col_index == 3 and value:
-                    open_photo = partial(self.open_photo, path=value)
-                    view_button = ctk.CTkButton(data_frame, text="View Photo", width=100, command=open_photo)
-                    view_button.grid(row=row_index, column=col_index, padx=10, pady=5)
-                elif col_index == 4:
+            for col, cell in enumerate(cells):
+                if col == 3 and cell:
+                    ctk.CTkButton(
+                        data_frame,
+                        text="View Photo",
+                        width=100,
+                        command=partial(self.open_photo, path=cell)
+                    ).grid(row=row, column=col, padx=10, pady=5)
+                elif col == 4:
                     status_menu = ctk.CTkOptionMenu(
                         data_frame,
                         values=["pending", "in progress", "resolved"],
                         command=partial(self.change_status, report_id)
                     )
-                    status_menu.set(value)
-                    status_menu.grid(row=row_index, column=col_index, padx=10, pady=5)
+                    status_menu.set(cell)
+                    status_menu.grid(row=row, column=col, padx=10, pady=5)
                 else:
-                    label = ctk.CTkLabel(data_frame, text=str(value), font=("Arial", 12), text_color="black", anchor="w")
-                    label.grid(row=row_index, column=col_index, padx=10, pady=5)
+                    ctk.CTkLabel(
+                        data_frame,
+                        text=str(cell),
+                        font=("Arial", 12),
+                        text_color="black",
+                        anchor="w"
+                    ).grid(row=row, column=col, padx=10, pady=5)
 
         canvas.update_idletasks()
         canvas.config(scrollregion=canvas.bbox("all"))
@@ -78,9 +87,10 @@ class AdminPanel(ctk.CTkToplevel):
 
     def open_photo(self, path):
         try:
-            if platform.system() == "Windows":
+            system = platform.system()
+            if system == "Windows":
                 os.startfile(path)
-            elif platform.system() == "Darwin":
+            elif system == "Darwin":
                 subprocess.call(["open", path])
             else:
                 subprocess.call(["xdg-open", path])
