@@ -17,11 +17,11 @@ class BantayUsokApp(ctk.CTk):
         self.geometry("900x600")
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
-        self.resizable(False, False)
+        self.resizable(True, True)
         self.photo_path = None
 
         tabview = ctk.CTkTabview(self)
-        tabview.pack(fill="both", expand=True, padx=10, pady=10)
+        tabview.pack(fill="both", expand=True, padx=7, pady=10)
 
         # Tabs
         self.report_tab = tabview.add("Report Smoke")
@@ -31,35 +31,57 @@ class BantayUsokApp(ctk.CTk):
         self.build_report_tab()
         self.build_dashboard_tab()
 
+    def animate_gif(self):
+        self.current_frame = (self.current_frame + 1) % len(self.gif_frames)
+        self.canvas.itemconfig(self.bg_image_id, image=self.gif_frames[self.current_frame])
+        self.after(50, self.animate_gif)  # Adjust timing if needed
+
     def build_report_tab(self):
-        # Load background image
-        bg_path = "images/bg_report_tab.jpg"  # Ensure this matches the actual filename
-        image = Image.open(bg_path).resize((900, 600))
-        self.bg_image = ImageTk.PhotoImage(image)
+        # 🖼️ Load animated GIF
+        gif_path = "images/bg_report_tab.gif"
+        self.gif_image = Image.open(gif_path)
+        self.gif_frames = []
 
-        # Create canvas to hold background
-        canvas = Canvas(self.report_tab, width=900, height=600, highlightthickness=0)
-        canvas.pack(fill="both", expand=True)
-        canvas.create_image(0, 0, anchor="nw", image=self.bg_image)
+        try:
+            while True:
+                frame = self.gif_image.copy().resize((1400, 700))
+                self.gif_frames.append(ImageTk.PhotoImage(frame))
+                self.gif_image.seek(len(self.gif_frames))  # Move to next frame
+        except EOFError:
+            pass  # End of frames
 
+        self.current_frame = 0
 
-        form_frame = ctk.CTkFrame(master=canvas, fg_color="transparent")  # Try "transparent"
-        canvas.create_window(450, 340, window=form_frame, anchor="center")
+        # 🎞️ Create canvas and start animation
+        self.canvas = Canvas(self.report_tab, width=900, height=600, highlightthickness=0)
+        self.canvas.pack(fill="both", expand=True)
+        self.bg_image_id = self.canvas.create_image(0, 0, anchor="nw", image=self.gif_frames[0])
+        self.animate_gif()
 
-        ctk.CTkLabel(form_frame, text="Smoke Type:", fg_color="transparent").pack(pady=5)
+        # 🧾 Create the form frame
+        form_frame = ctk.CTkFrame(master=self.canvas, fg_color="white", corner_radius=10)
+        self.canvas.create_window(685, 360, window=form_frame, anchor="center")
+
+        form_frame.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(form_frame, text="Smoke Type:", fg_color="transparent").grid(row=0, column=0, sticky="w",
+                                                                                  pady=(0, 5))
         self.smoke_type = ctk.CTkOptionMenu(form_frame, values=["Cigarette", "Burning Trash", "Vehicle Emission"])
-        self.smoke_type.pack()
+        self.smoke_type.grid(row=1, column=0, sticky="ew", pady=(0, 10))
 
-        ctk.CTkLabel(form_frame, text="Location (Barangay/Street):", fg_color="transparent").pack(pady=5)
+        ctk.CTkLabel(form_frame, text="Location (Barangay/Street):", fg_color="transparent").grid(row=2, column=0,
+                                                                                                  sticky="w",
+                                                                                                  pady=(0, 5))
         self.location_entry = ctk.CTkEntry(form_frame, placeholder_text="e.g. Barangay 5, Mabini St.")
-        self.location_entry.pack()
+        self.location_entry.grid(row=3, column=0, sticky="ew", pady=(0, 10))
 
-        ctk.CTkLabel(form_frame, text="Description:", fg_color="transparent").pack(pady=5)
+        ctk.CTkLabel(form_frame, text="Description:", fg_color="transparent").grid(row=4, column=0, sticky="w",
+                                                                                   pady=(0, 5))
         self.description_entry = ctk.CTkTextbox(form_frame, height=100)
-        self.description_entry.pack()
+        self.description_entry.grid(row=5, column=0, sticky="ew", pady=(0, 10))
 
-        ctk.CTkButton(form_frame, text="Upload Photo", command=self.upload_photo).pack(pady=10)
-        ctk.CTkButton(form_frame, text="Submit Report", command=self.submit_report).pack(pady=10)
+        ctk.CTkButton(form_frame, text="Upload Photo", command=self.upload_photo).grid(row=6, column=0, pady=(0, 10))
+        ctk.CTkButton(form_frame, text="Submit Report", command=self.submit_report).grid(row=7, column=0, pady=(0, 10))
 
     def upload_photo(self):
         file_path = fd.askopenfilename(filetypes=[("Image Files", "*.png *.jpg *.jpeg")])
