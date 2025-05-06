@@ -12,7 +12,7 @@ from PIL import Image, ImageTk
 
 
 class AnimatedGIF(ctk.CTkLabel):
-    def __init__(self, master, gif_path, size=(1400, 600)):
+    def __init__(self, master, gif_path, size=(1920, 1080)):
         self.frames = []
         self.load_frames(gif_path, size)
         super().__init__(master, image=self.frames[0], text="")
@@ -34,6 +34,7 @@ class AnimatedGIF(ctk.CTkLabel):
         self.configure(image=self.frames[self.index])
         self.after(100, self.update_frame)
 
+
 class BantayUsokApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -51,21 +52,22 @@ class BantayUsokApp(ctk.CTk):
         main_container = ctk.CTkFrame(self)
         main_container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        tabview = ctk.CTkTabview(main_container,fg_color="#a2c4c9",
-            segmented_button_fg_color="#a2c4c9",
-            segmented_button_selected_color="#839ea2",
-            segmented_button_unselected_color="#a2c4c9",
-            text_color="#545454")
-        tabview.pack(fill="both", expand=True)
+        self.tabview = ctk.CTkTabview(main_container, fg_color="#a2c4c9",
+                                      segmented_button_fg_color="#a2c4c9",
+                                      segmented_button_selected_color="#839ea2",
+                                      segmented_button_unselected_color="#a2c4c9",
+                                      text_color="#545454")
+        self.tabview.pack(fill="both", expand=True)
 
-        self.report_tab = tabview.add("Report Smoke")
-        self.dashboard_tab = tabview.add("Dashboard")
+        self.report_tab = self.tabview.add("Report Smoke")
+        self.dashboard_tab = self.tabview.add("Dashboard")
 
         self.build_report_tab()
         self.build_dashboard_tab()
 
         self.bind("<Configure>", self.on_window_resize)
 
+        # Create info button but don't show it yet
         self.info_button = ctk.CTkButton(
             self,
             text="ℹ",
@@ -75,7 +77,21 @@ class BantayUsokApp(ctk.CTk):
             fg_color="#309baa",
             corner_radius=1,
         )
-        self.info_button.place(relx=0.99, rely=0.96, anchor="e")
+
+        # Bind tab change event
+        self.tabview.configure(command=self.on_tab_change)
+
+        # Check initial tab and show/hide button accordingly
+        self.on_tab_change()
+
+    def on_tab_change(self, event=None):
+        """Show/hide info button based on current active tab"""
+        current_tab = self.tabview.get()
+
+        if current_tab == "Report Smoke":
+            self.info_button.place(relx=0.99, rely=0.96, anchor="e")
+        else:
+            self.info_button.place_forget()
 
     def show_info_module(self):
         info_window = ctk.CTkToplevel(self)
@@ -90,52 +106,40 @@ class BantayUsokApp(ctk.CTk):
         # Create and pack the styled tabview ONCE
         tabview = ctk.CTkTabview(
             info_window,
-            fg_color="#8bb987",
-            segmented_button_fg_color="#8bb987",
-            segmented_button_selected_color="#538546",
-            segmented_button_unselected_color="#8bb987",
-            text_color="#545454"
+            fg_color="#f2e6c9",
+            segmented_button_fg_color="#f2e6c9",
+            segmented_button_selected_color="#e3c98b",
+            segmented_button_unselected_color="#f2e6c9",
+            text_color="#3d0c02"
         )
         tabview.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Health Effects tab
         health_tab = tabview.add("Health Effects")
-        health_tab.configure(fg_color="#8bb987")
+        health_tab.configure(fg_color="#f2e6c9")
         try:
-            gif1 = AnimatedGIF(health_tab, "images/health.gif", size=(800, 500))
-            gif1.pack(padx=10, pady=10)
+            gif1 = AnimatedGIF(health_tab, "images/health.gif", size=(900, 600))
+            gif1.pack(padx=5, pady=5)
         except Exception as e:
             ctk.CTkLabel(health_tab, text="GIF could not be loaded.", text_color="red").pack()
 
-        # Add a description for the health tab
-        ctk.CTkLabel(health_tab, text="Impact of air pollution on human health.", font=("Arial", 14),
-                     text_color="white").pack(pady=10)
-
         # Ordinances tab
         ordinance_tab = tabview.add("Ordinances")
-        ordinance_tab.configure(fg_color="#8bb987")
+        ordinance_tab.configure(fg_color="#f2e6c9")
         try:
-            gif2 = AnimatedGIF(ordinance_tab, "images/ordinance.gif", size=(600, 300))
+            gif2 = AnimatedGIF(ordinance_tab, "images/ordinance.gif", size=(900, 600))
             gif2.pack(padx=10, pady=10)
         except Exception as e:
             ctk.CTkLabel(ordinance_tab, text="GIF could not be loaded.", text_color="red").pack()
 
-        # Add a description for the ordinances tab
-        ctk.CTkLabel(ordinance_tab, text="Important ordinances addressing air pollution.", font=("Arial", 14),
-                     text_color="white").pack(pady=10)
-
         # Clean Air Tips tab
         tips_tab = tabview.add("Clean Air Tips")
-        tips_tab.configure(fg_color="#8bb987")
+        tips_tab.configure(fg_color="#f2e6c9")
         try:
-            gif3 = AnimatedGIF(tips_tab, "images/tips.gif", size=(800, 500))
+            gif3 = AnimatedGIF(tips_tab, "images/tips.gif", size=(900, 600))
             gif3.pack(padx=10, pady=10)
         except Exception as e:
             ctk.CTkLabel(tips_tab, text="GIF could not be loaded.", text_color="red").pack()
-
-        # Add a description for the tips tab
-        ctk.CTkLabel(tips_tab, text="Practical tips to reduce exposure to air pollution.", font=("Arial", 14),
-                     text_color="white").pack(pady=10)
 
     def on_window_resize(self, event):
         if hasattr(self, 'canvas'):
@@ -147,7 +151,7 @@ class BantayUsokApp(ctk.CTk):
         self.after(50, self.animate_gif)
 
     def build_report_tab(self):
-        self.canvas = Canvas(self.report_tab, width=1400, height=650, highlightthickness=0)
+        self.canvas = Canvas(self.report_tab, width=1920, height=1080, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
 
         gif_path = "images/bg_report_tab.gif"
@@ -156,7 +160,7 @@ class BantayUsokApp(ctk.CTk):
 
         try:
             while True:
-                frame = self.gif_image.copy().resize((1400, 650))
+                frame = self.gif_image.copy().resize((1920, 1080))
                 self.gif_frames.append(ImageTk.PhotoImage(frame))
                 self.gif_image.seek(len(self.gif_frames))
         except EOFError:
@@ -167,11 +171,12 @@ class BantayUsokApp(ctk.CTk):
         self.animate_gif()
 
         form_frame = ctk.CTkFrame(master=self.canvas, fg_color="#a2c4c9", corner_radius=1)
-        self.canvas.create_window(650, 400, window=form_frame, anchor="center")
+        self.canvas.create_window(950, 580, window=form_frame, anchor="center")
         form_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(form_frame, text="Report", font=("Montserrat", 30, "bold"), text_color="#222").grid(row=0,
-                column=0,pady=(10,20))
+                                                                                                         column=0,
+                                                                                                         pady=(10, 20))
 
         # Name field - row 1
         ctk.CTkLabel(form_frame, text="Name:", text_color="#333", font=("Open Sans", 14)).grid(
@@ -262,7 +267,7 @@ class BantayUsokApp(ctk.CTk):
         headers = ["Smoke Type", "Location", "Description", "Photo", "Status", "Timestamp"]
         for col_index, header in enumerate(headers):
             label = ctk.CTkLabel(data_frame, text=header, font=("MS UI Gothic", 20, "bold"), text_color="black")
-            label.grid(row=0, column=col_index, padx=65, pady=5)
+            label.grid(row=0, column=col_index, padx=80, pady=5)
 
         for row_index, record in enumerate(records, start=1):
             for col_index, value in enumerate(record):
@@ -271,7 +276,8 @@ class BantayUsokApp(ctk.CTk):
                     view_button = ctk.CTkButton(data_frame, text="View Photo", width=100, command=open_photo)
                     view_button.grid(row=row_index, column=col_index, padx=10, pady=5)
                 else:
-                    label = ctk.CTkLabel(data_frame, text=str(value), font=("Arial", 12), text_color="black", anchor="w")
+                    label = ctk.CTkLabel(data_frame, text=str(value), font=("Arial", 12), text_color="black",
+                                         anchor="w")
                     label.grid(row=row_index, column=col_index, padx=10, pady=5)
 
         canvas.update_idletasks()
@@ -359,14 +365,60 @@ class BantayUsokApp(ctk.CTk):
 
     def open_photo(self, path):
         try:
-            if platform.system() == "Windows":
-                os.startfile(path)
-            elif platform.system() == "Darwin":
-                subprocess.call(["open", path])
-            else:
-                subprocess.call(["xdg-open", path])
+            photo_window = ctk.CTkToplevel(self)
+            photo_window.title("Report Photo")
+            photo_window.geometry("800x600")
+            photo_window.resizable(True, True)
+            photo_window.protocol("WM_DELETE_WINDOW", lambda: self.close_photo_window(photo_window))
+
+            # Make sure the photo window stays on top of the admin panel
+            photo_window.transient(self)  # Set as transient window
+            photo_window.grab_set()  # Grab focus
+            photo_window.lift()  # Bring to top
+
+            # Load image
+            img = Image.open(path)
+            img.thumbnail((750, 550))  # Resize maintaining aspect ratio
+
+            # Create CTkImage
+            ctk_image = ctk.CTkImage(
+                light_image=img,
+                dark_image=img,
+                size=img.size
+            )
+
+            # Display image
+            img_frame = ctk.CTkFrame(photo_window)
+            img_frame.pack(expand=True, fill="both", padx=10, pady=10)
+
+            img_label = ctk.CTkLabel(img_frame, text="", image=ctk_image)
+            img_label.pack(expand=True)
+
+            # Keep references
+            photo_window.image_reference = ctk_image
+            photo_window.img_label = img_label
+
+            # Close button
+            close_btn = ctk.CTkButton(
+                photo_window,
+                text="Close",
+                command=lambda: self.close_photo_window(photo_window),
+                fg_color="#e74c3c",
+                hover_color="#c0392b"
+            )
+            close_btn.pack(pady=10)
+
         except Exception as e:
-            messagebox.showerror("Error", f"Cannot open image: {e}")
+            messagebox.showerror("Error", f"Cannot open image: {e}", parent=self)
+
+    def close_photo_window(self, window):
+        """Properly clean up photo window"""
+        if hasattr(window, 'image_reference'):
+            del window.image_reference
+        if hasattr(window, 'img_label'):
+            window.img_label.destroy()
+        window.destroy()
+
 
 if __name__ == "__main__":
     init_db()
