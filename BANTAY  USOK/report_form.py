@@ -11,6 +11,29 @@ from functools import partial
 from PIL import Image, ImageTk
 
 
+class AnimatedGIF(ctk.CTkLabel):
+    def __init__(self, master, gif_path, size=(1400, 600)):
+        self.frames = []
+        self.load_frames(gif_path, size)
+        super().__init__(master, image=self.frames[0], text="")
+        self.index = 0
+        self.after(50, self.update_frame)
+
+    def load_frames(self, gif_path, size):
+        gif = Image.open(gif_path)
+        try:
+            while True:
+                frame = gif.copy().resize(size)
+                self.frames.append(ImageTk.PhotoImage(frame))
+                gif.seek(len(self.frames))
+        except EOFError:
+            pass
+
+    def update_frame(self):
+        self.index = (self.index + 1) % len(self.frames)
+        self.configure(image=self.frames[self.index])
+        self.after(100, self.update_frame)
+
 class BantayUsokApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -28,7 +51,11 @@ class BantayUsokApp(ctk.CTk):
         main_container = ctk.CTkFrame(self)
         main_container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        tabview = ctk.CTkTabview(main_container)
+        tabview = ctk.CTkTabview(main_container,fg_color="#a2c4c9",
+            segmented_button_fg_color="#a2c4c9",
+            segmented_button_selected_color="#839ea2",
+            segmented_button_unselected_color="#a2c4c9",
+            text_color="#545454")
         tabview.pack(fill="both", expand=True)
 
         self.report_tab = tabview.add("Report Smoke")
@@ -43,11 +70,72 @@ class BantayUsokApp(ctk.CTk):
             self,
             text="ℹ",
             command=self.show_info_module,
-            width=40,
-            height=40,
+            width=30,
+            height=30,
             fg_color="#309baa",
+            corner_radius=1,
         )
-        self.info_button.place(relx=0.98, rely=0.98, anchor="se")
+        self.info_button.place(relx=0.99, rely=0.96, anchor="e")
+
+    def show_info_module(self):
+        info_window = ctk.CTkToplevel(self)
+        info_window.title("Air Pollution Information")
+        info_window.geometry("900x600")
+        info_window.resizable(False, False)
+
+        # Make the info window modal
+        info_window.grab_set()
+        info_window.focus()
+
+        # Create and pack the styled tabview ONCE
+        tabview = ctk.CTkTabview(
+            info_window,
+            fg_color="#8bb987",
+            segmented_button_fg_color="#8bb987",
+            segmented_button_selected_color="#538546",
+            segmented_button_unselected_color="#8bb987",
+            text_color="#545454"
+        )
+        tabview.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Health Effects tab
+        health_tab = tabview.add("Health Effects")
+        health_tab.configure(fg_color="#8bb987")
+        try:
+            gif1 = AnimatedGIF(health_tab, "images/health.gif", size=(800, 500))
+            gif1.pack(padx=10, pady=10)
+        except Exception as e:
+            ctk.CTkLabel(health_tab, text="GIF could not be loaded.", text_color="red").pack()
+
+        # Add a description for the health tab
+        ctk.CTkLabel(health_tab, text="Impact of air pollution on human health.", font=("Arial", 14),
+                     text_color="white").pack(pady=10)
+
+        # Ordinances tab
+        ordinance_tab = tabview.add("Ordinances")
+        ordinance_tab.configure(fg_color="#8bb987")
+        try:
+            gif2 = AnimatedGIF(ordinance_tab, "images/ordinance.gif", size=(600, 300))
+            gif2.pack(padx=10, pady=10)
+        except Exception as e:
+            ctk.CTkLabel(ordinance_tab, text="GIF could not be loaded.", text_color="red").pack()
+
+        # Add a description for the ordinances tab
+        ctk.CTkLabel(ordinance_tab, text="Important ordinances addressing air pollution.", font=("Arial", 14),
+                     text_color="white").pack(pady=10)
+
+        # Clean Air Tips tab
+        tips_tab = tabview.add("Clean Air Tips")
+        tips_tab.configure(fg_color="#8bb987")
+        try:
+            gif3 = AnimatedGIF(tips_tab, "images/tips.gif", size=(800, 500))
+            gif3.pack(padx=10, pady=10)
+        except Exception as e:
+            ctk.CTkLabel(tips_tab, text="GIF could not be loaded.", text_color="red").pack()
+
+        # Add a description for the tips tab
+        ctk.CTkLabel(tips_tab, text="Practical tips to reduce exposure to air pollution.", font=("Arial", 14),
+                     text_color="white").pack(pady=10)
 
     def on_window_resize(self, event):
         if hasattr(self, 'canvas'):
@@ -68,7 +156,7 @@ class BantayUsokApp(ctk.CTk):
 
         try:
             while True:
-                frame = self.gif_image.copy().resize((1920, 1080))
+                frame = self.gif_image.copy().resize((1400, 650))
                 self.gif_frames.append(ImageTk.PhotoImage(frame))
                 self.gif_image.seek(len(self.gif_frames))
         except EOFError:
@@ -79,7 +167,7 @@ class BantayUsokApp(ctk.CTk):
         self.animate_gif()
 
         form_frame = ctk.CTkFrame(master=self.canvas, fg_color="#a2c4c9", corner_radius=1)
-        self.canvas.create_window(950, 580, window=form_frame, anchor="center")
+        self.canvas.create_window(650, 400, window=form_frame, anchor="center")
         form_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(form_frame, text="Report", font=("Montserrat", 30, "bold"), text_color="#222").grid(row=0,
@@ -279,72 +367,6 @@ class BantayUsokApp(ctk.CTk):
                 subprocess.call(["xdg-open", path])
         except Exception as e:
             messagebox.showerror("Error", f"Cannot open image: {e}")
-
-    def show_info_module(self):
-        # Create a new top-level window
-        info_window = ctk.CTkToplevel(self)
-        info_window.title("Air Pollution Information")
-        info_window.geometry("600x500")
-        info_window.resizable(False, False)
-
-        # Create a tabbed interface for different information sections
-        tabview = ctk.CTkTabview(info_window)
-        tabview.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # Health Effects tab
-        health_tab = tabview.add("Health Effects")
-        health_text = """🚑 Health Effects of Air Pollution:
-
-    - Respiratory diseases (asthma, bronchitis, lung cancer)
-    - Cardiovascular problems
-    - Irritation of eyes, nose, and throat
-    - Increased risk of stroke
-    - Premature death in people with heart or lung disease
-    - Developmental issues in children
-
-    Children, elderly, and those with pre-existing conditions are most vulnerable."""
-        ctk.CTkLabel(health_tab, text=health_text, justify="left").pack(padx=10, pady=10)
-
-        # Ordinances tab
-        ordinance_tab = tabview.add("Ordinances")
-        ordinance_text = """⚖️ Philippine Air Pollution Laws:
-
-    1. Republic Act 8749 - Clean Air Act of 1999
-       - Prohibits smoking in public places
-       - Bans open burning of waste
-       - Sets vehicle emission standards
-
-    2. Local Ordinances:
-       - Anti-Smoking Ordinances in cities
-       - Ban on open burning (RA 9003)
-       - Truck ban during peak hours
-       - No-idling policies
-
-    Violations can result in fines up to ₱100,000."""
-        ctk.CTkLabel(ordinance_tab, text=ordinance_text, justify="left").pack(padx=10, pady=10)
-
-        # Tips tab
-        tips_tab = tabview.add("Clean Air Tips")
-        tips_text = """🌱 How You Can Help:
-
-    ♻️ Proper Waste Disposal:
-    - Segregate waste (biodegradable, recyclable, residual)
-    - Compost organic waste
-    - Recycle whenever possible
-    - Dispose hazardous waste properly
-
-    🌬️ Clean Air Practices:
-    - Use public transport or carpool
-    - Maintain vehicles regularly
-    - Plant trees and maintain plants
-    - Report smoke pollution incidents
-    - Use clean energy when possible
-
-    Every small action contributes to cleaner air!"""
-        ctk.CTkLabel(tips_tab, text=tips_text, justify="left").pack(padx=10, pady=10)
-
-
-
 
 if __name__ == "__main__":
     init_db()
