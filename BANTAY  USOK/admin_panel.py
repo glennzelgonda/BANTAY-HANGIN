@@ -4,9 +4,6 @@ import tkinter as tk
 tk.Tk().withdraw()
 import tkinter.messagebox as messagebox
 import sqlite3
-import os
-import platform
-import subprocess
 from functools import partial
 from database import update_status
 from PIL import Image, ImageTk
@@ -80,7 +77,7 @@ class AdminPanel(ctk.CTkToplevel):
         # Connect to database
         conn = sqlite3.connect("reports.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT id, smoke_type, location, description, photo_path, status, timestamp FROM reports")
+        cursor.execute("SELECT id, name, smoke_type, location, description, photo_path, status, timestamp FROM reports")
         records = cursor.fetchall()
         conn.close()
 
@@ -94,11 +91,11 @@ class AdminPanel(ctk.CTkToplevel):
         scroll_frame.grid(row=0, column=0, sticky="nsew")
 
         # Configure grid for data display
-        for i in range(7):  # 7 columns
-            scroll_frame.grid_columnconfigure(i, weight=1 if i in [1, 2] else 0)
+        for i in range(8):  # 8 columns now
+            scroll_frame.grid_columnconfigure(i, weight=1 if i in [1, 2, 3] else 0)
 
         # Table headers
-        headers = ["ID", "Smoke Type", "Location", "Description", "Photo", "Status", "Timestamp"]
+        headers = ["ID", "Name", "Smoke Type", "Location", "Description", "Photo", "Status", "Timestamp"]
         for col, header in enumerate(headers):
             header_frame = ctk.CTkFrame(scroll_frame, fg_color="#3498db", height=40)
             header_frame.grid(row=0, column=col, sticky="nsew", padx=1, pady=1)
@@ -112,58 +109,30 @@ class AdminPanel(ctk.CTkToplevel):
 
         # Table rows
         for row, record in enumerate(records, start=1):
-            report_id, smoke_type, location, description, photo_path, status, timestamp = record
-
-            # Alternate row colors
+            report_id, name, smoke_type, location, description, photo_path, status, timestamp = record
             row_color = "#ffffff" if row % 2 == 0 else "#f8f9fa"
 
-            # ID column
-            id_frame = ctk.CTkFrame(scroll_frame, fg_color=row_color, height=50)
-            id_frame.grid(row=row, column=0, sticky="nsew", padx=1, pady=1)
-            ctk.CTkLabel(
-                id_frame,
-                text=str(report_id),
-                font=("Arial", 11),
-                text_color="#2c3e50"
-            ).pack(expand=True, fill="both", padx=5, pady=5)
+            def make_label(value, col_index, anchor="w"):
+                frame = ctk.CTkFrame(scroll_frame, fg_color=row_color, height=50)
+                frame.grid(row=row, column=col_index, sticky="nsew", padx=1, pady=1)
+                ctk.CTkLabel(
+                    frame,
+                    text=value,
+                    font=("Arial", 11),
+                    text_color="#2c3e50",
+                    anchor=anchor,
+                    wraplength=200 if col_index == 4 else 0  # ← FIXED HERE
+                ).pack(expand=True, fill="both", padx=5, pady=5)
 
-            # Smoke Type column
-            type_frame = ctk.CTkFrame(scroll_frame, fg_color=row_color, height=50)
-            type_frame.grid(row=row, column=1, sticky="nsew", padx=1, pady=1)
-            ctk.CTkLabel(
-                type_frame,
-                text=smoke_type,
-                font=("Arial", 11),
-                text_color="#2c3e50",
-                anchor="w"
-            ).pack(expand=True, fill="both", padx=5, pady=5)
+            make_label(str(report_id), 0, "center")
+            make_label(name or "N/A", 1)
+            make_label(smoke_type, 2)
+            make_label(location, 3)
+            make_label(description[:50] + "..." if description and len(description) > 50 else description or "", 4)
 
-            # Location column
-            loc_frame = ctk.CTkFrame(scroll_frame, fg_color=row_color, height=50)
-            loc_frame.grid(row=row, column=2, sticky="nsew", padx=1, pady=1)
-            ctk.CTkLabel(
-                loc_frame,
-                text=location,
-                font=("Arial", 11),
-                text_color="#2c3e50",
-                anchor="w"
-            ).pack(expand=True, fill="both", padx=5, pady=5)
-
-            # Description column
-            desc_frame = ctk.CTkFrame(scroll_frame, fg_color=row_color, height=50)
-            desc_frame.grid(row=row, column=3, sticky="nsew", padx=1, pady=1)
-            ctk.CTkLabel(
-                desc_frame,
-                text=description[:50] + "..." if len(description) > 50 else description,
-                font=("Arial", 11),
-                text_color="#2c3e50",
-                anchor="w",
-                wraplength=200
-            ).pack(expand=True, fill="both", padx=5, pady=5)
-
-            # Photo column
+            # Photo button
             photo_frame = ctk.CTkFrame(scroll_frame, fg_color=row_color, height=50)
-            photo_frame.grid(row=row, column=4, sticky="nsew", padx=1, pady=1)
+            photo_frame.grid(row=row, column=5, sticky="nsew", padx=1, pady=1)
             if photo_path:
                 photo_btn = ctk.CTkButton(
                     photo_frame,
@@ -184,11 +153,10 @@ class AdminPanel(ctk.CTkToplevel):
                     text_color="#7f8c8d"
                 ).pack(expand=True, fill="both", padx=5, pady=5)
 
-            # Status column
+            # Status OptionMenu
             status_frame = ctk.CTkFrame(scroll_frame, fg_color=row_color, height=50)
-            status_frame.grid(row=row, column=5, sticky="nsew", padx=1, pady=1)
+            status_frame.grid(row=row, column=6, sticky="nsew", padx=1, pady=1)
 
-            # Color mapping for status
             status_colors = {
                 "pending": "#e74c3c",
                 "in progress": "#f39c12",
@@ -210,15 +178,8 @@ class AdminPanel(ctk.CTkToplevel):
             status_menu.set(status)
             status_menu.pack(expand=True, fill="both", padx=5, pady=5)
 
-            # Timestamp column
-            time_frame = ctk.CTkFrame(scroll_frame, fg_color=row_color, height=50)
-            time_frame.grid(row=row, column=6, sticky="nsew", padx=1, pady=1)
-            ctk.CTkLabel(
-                time_frame,
-                text=timestamp,
-                font=("Arial", 11),
-                text_color="#2c3e50"
-            ).pack(expand=True, fill="both", padx=5, pady=5)
+            # Timestamp
+            make_label(timestamp, 7, "center")
 
     def change_status(self, report_id, new_status):
         update_status(report_id, new_status)
