@@ -4,9 +4,6 @@ import tkinter.messagebox as messagebox
 import sqlite3
 from tkinter import Scrollbar, Canvas
 from database import init_db, insert_report
-import os
-import platform
-import subprocess
 from functools import partial
 from PIL import Image, ImageTk
 
@@ -248,7 +245,8 @@ class BantayUsokApp(ctk.CTk):
     def display_dashboard_data(self):
         conn = sqlite3.connect("reports.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT smoke_type, location, description, photo_path, status, timestamp FROM reports")
+        cursor.execute(
+            "SELECT smoke_type, location, description, status, timestamp FROM reports")  # Removed photo_path from query
         records = cursor.fetchall()
         conn.close()
 
@@ -264,21 +262,17 @@ class BantayUsokApp(ctk.CTk):
         canvas.configure(yscrollcommand=v_scrollbar.set)
         v_scrollbar.pack(side="right", fill="y")
 
-        headers = ["Smoke Type", "Location", "Description", "Photo", "Status", "Timestamp"]
+        # Removed "Photo" from headers
+        headers = ["Smoke Type", "Location", "Description", "Status", "Timestamp"]
         for col_index, header in enumerate(headers):
             label = ctk.CTkLabel(data_frame, text=header, font=("MS UI Gothic", 20, "bold"), text_color="black")
-            label.grid(row=0, column=col_index, padx=80, pady=5)
+            label.grid(row=0, column=col_index, padx=100, pady=5)
 
         for row_index, record in enumerate(records, start=1):
             for col_index, value in enumerate(record):
-                if col_index == 3 and value:
-                    open_photo = partial(self.open_photo, path=value)
-                    view_button = ctk.CTkButton(data_frame, text="View Photo", width=100, command=open_photo)
-                    view_button.grid(row=row_index, column=col_index, padx=10, pady=5)
-                else:
-                    label = ctk.CTkLabel(data_frame, text=str(value), font=("Arial", 12), text_color="black",
-                                         anchor="w")
-                    label.grid(row=row_index, column=col_index, padx=10, pady=5)
+                label = ctk.CTkLabel(data_frame, text=str(value), font=("Arial", 12), text_color="black",
+                                     anchor="w")
+                label.grid(row=row_index, column=col_index, padx=10, pady=5)
 
         canvas.update_idletasks()
         canvas.config(scrollregion=canvas.bbox("all"))
