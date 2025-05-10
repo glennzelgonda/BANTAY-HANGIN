@@ -184,7 +184,7 @@ class BantayUsokApp(ctk.CTk):
         # Smoke Type - row 3 (changed from row 1)
         ctk.CTkLabel(form_frame, text="Smoke Type:", text_color="#333", font=("Open Sans", 14)).grid(
             row=3, column=0, sticky="w", padx=20)
-        self.smoke_type = ctk.CTkOptionMenu(form_frame, values=["Cigarette", "Burning Trash", "Vehicle Emission"],
+        self.smoke_type = ctk.CTkOptionMenu(form_frame, values=["Cigarette", "Burning Trash", "Vehicle Emission","Others"],
                                             button_color="#309baa", fg_color="#309baa", text_color="black")
         self.smoke_type.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
 
